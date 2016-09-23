@@ -15,10 +15,26 @@ namespace ExpertSystemShell.KnowledgeBases
     {
         protected IStorageService stService;
         protected KnowledgeBaseType type; //???
+        protected List<IData> workMemory;
+        protected bool stateChanged;
+
+        public IEnumerable<IData> CurrentData
+        {
+            get 
+            {
+                stateChanged = false;
+                return workMemory;
+            }
+        }
+        public bool StateChanged
+        {
+            get { return stateChanged; }
+        }
 
         public AbstractKnowledgeBase(IStorageService stService)
         {
             this.stService = stService;
+            this.workMemory = new List<IData>();
         }
 
         #region IKnowledgeBase Members
@@ -29,6 +45,7 @@ namespace ExpertSystemShell.KnowledgeBases
         /// <param name="statement">The statement.</param>
         public virtual void AddStatement(ILogicalStatement statement)
         {
+            stateChanged = true;
             stService.AddStatement(statement);
         }
         /// <summary>
@@ -37,6 +54,7 @@ namespace ExpertSystemShell.KnowledgeBases
         /// <param name="statement">The statement.</param>
         public virtual void RemoveStatement(ILogicalStatement statement)
         {
+            stateChanged = true;
             stService.RemoveStatement(statement);
         }
         /// <summary>
@@ -52,5 +70,58 @@ namespace ExpertSystemShell.KnowledgeBases
         public abstract void RemoveConflicts();
 
         #endregion
+
+        #region IKnowledgeBase Members
+
+
+        /// <summary>
+        /// Добавляет элементарные знания в рабочую память.
+        /// </summary>
+        /// <param name="data"></param>
+        public void AddData(IData data)
+        {
+            if (!workMemory.Contains(data))
+            {
+                workMemory.Add(data);
+                stateChanged = true;
+            }
+        }
+        /// <summary>
+        /// Очищает рябочую память.
+        /// </summary>
+        public void ClearWorkMemory()
+        {
+            stateChanged = true;
+            workMemory.Clear();
+        }
+        /// <summary>
+        /// Проверяет истинность логического высказывания.
+        /// </summary>
+        /// <param name="statement">Логическое утверждение..</param>
+        /// <returns>
+        /// Возвращает <c>true</c>, если правило можно выполнить.
+        /// </returns>
+        public abstract bool CheckStatement(ILogicalStatement statement);
+
+        #endregion
+
+        #region IEnumerable<ILogicalStatement> Members
+
+        public IEnumerator<ILogicalStatement> GetEnumerator()
+        {
+            return stService.GetEnumerator();
+        }
+
+        #endregion
+
+        #region IEnumerable Members
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        #endregion
+
     }
 }

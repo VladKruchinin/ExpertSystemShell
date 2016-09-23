@@ -9,17 +9,11 @@ namespace ExpertSystemShell.KnowledgeBases.ProductionModel
 {
     public class ProdRuleKnBase: AbstractKnowledgeBase
     {
-        protected List<ProductionFact> workMem;
 
-
-        public void AddFact(ProductionFact fact)
-        {
-            workMem.Add(fact);
-        }
         public ProdRuleKnBase(IStorageService stService): base(stService)
         {
-            this.workMem = new List<ProductionFact>();
         }
+
         /// <summary>
         /// Проверяет на конфликк два правила. Возвращает true, если два правила конфликуют.
         /// </summary>
@@ -29,7 +23,7 @@ namespace ExpertSystemShell.KnowledgeBases.ProductionModel
         /// <exception cref="System.NotImplementedException"></exception>
         public override bool CheckConflict(ILogicalStatement st1, ILogicalStatement st2)
         {
-            throw new NotImplementedException();
+            return false;
         }
         /// <summary>
         /// Разрешает логические конфликты в базе.
@@ -38,6 +32,23 @@ namespace ExpertSystemShell.KnowledgeBases.ProductionModel
         public override void RemoveConflicts()
         {
             throw new NotImplementedException();
+        }
+        /// <summary>
+        /// Проверяет истинность логического высказывания.
+        /// </summary>
+        /// <param name="statement">Логическое утверждение..</param>
+        /// <returns>
+        /// Возвращает <c>true</c>, если правило можно выполнить.
+        /// </returns>
+        public override bool CheckStatement(ILogicalStatement statement)
+        {
+            ProductionRule rule = (ProductionRule)statement;
+            foreach(string variableName in rule.Condition.VariableNames)
+            {
+                foreach (var fact in workMemory)
+                    rule.Condition.SetVariable(fact.Name, fact);
+            }
+            return rule.Condition.Calculate() == true;
         }
     }
 }
